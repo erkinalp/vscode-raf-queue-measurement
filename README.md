@@ -85,6 +85,24 @@ Two consequences:
   is most of them. It needs a scheduling sequence number to be order-preserving, and with one
   (`stable-heap`) it measured no better than the 15-line `ordered-insert` at any `n` above 5.
 
+### Mutation check for the checked-in tests
+
+The regression tests in `src/vs/base/test/browser/animationFrame.test.ts` pin two schedules:
+
+| schedule | expected order |
+|---|---|
+| equal-priority callbacks plus one added while the frame runs | `['frame', 'a', 'b', 'inserted', 'late']` |
+| insertion before, between and after the callbacks still pending | `['inserter', 'before', 'a', 'b', 'between', 'low', 'after']` |
+
+Both expected sequences come from `src/order-check.mts` running the real code, not from hand
+derivation, and both tests fail if the insertion search flips from `>=` to `>` (`variants/mutant-gt.mts`,
+built by the same op list with that one character changed):
+
+| schedule | correct (`>=`) | mutant (`>`) |
+|---|---|---|
+| equal-priority | `["frame","a","b","inserted","late"]` | `["frame","inserted","a","b","late"]` |
+| insertion boundaries | `["inserter","before","a","b","between","low","after"]` | `["inserter","before","between","a","b","low","after"]` |
+
 ## What this does **not** measure
 
 The distribution of `n` in the product. The best in-product evidence so far is from
@@ -109,13 +127,13 @@ node extract-raf.mjs ../dom/dom-main.ts ordered-insert variants/ordered-insert.m
 node extract-raf.mjs ../dom/dom-main.ts sort-once      variants/sort-once.mts
 node extract-raf.mjs ../dom/dom-main.ts heap           variants/heap.mts
 node extract-raf.mjs ../dom/dom-main.ts stable-heap    variants/stable-heap.mts
+node extract-raf.mjs ../dom/dom-main.ts mutant-gt      variants/mutant-gt.mts  # >= flipped to >
 
 node apply-fix.mjs            ../dom/dom-main.ts ../dom/dom-main-fixed.ts
 node extract-raf.mjs          ../dom/dom-main-fixed.ts current variants/from-patched.mts
 node verify.mjs               # shipped code == benchmarked code
 
-node order-check.mts current  # the exact schedule used by the unit test in the PR
-node order-check.mts ordered-insert
+for v in current ordered-insert mutant-gt; do node order-check.mts $v; done  # the two unit-test schedules
 node equiv.mts 2000           # differential equivalence
 node bench-driver.mts         # full matrix -> results/
 node bench-worker.mts current 100 zeros none 2000 9   # one point

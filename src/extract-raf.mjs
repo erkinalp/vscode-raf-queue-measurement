@@ -227,6 +227,8 @@ const variants = {
 
 	'ordered-insert': FIX_OPS,
 
+	'mutant-gt': [...FIX_OPS, op(`${T}${T}${T}if (queue[mid].priority >= item.priority) {`, `${T}${T}${T}if (queue[mid].priority > item.priority) {`)],
+
 	'stable-heap': STABLE_HEAP_OPS,
 
 	heap: [
