@@ -50,8 +50,8 @@ Priorities: the real mix (mostly `0`, plus the rare `10000` from `measure()` / `
 | 500 | 1 581 100.6 | 33 602.8 | **35 176.7** | 38 510.5 | 19 605.8 |
 
 *(`sort-once`, `ordered-insert` and `heap` from the 9-sample matrix; `stable-heap` from a
-follow-up 7-sample run. Full matrices, including in-frame insertion patterns and the
-`mixed` priority distribution, are in `results/`.)*
+follow-up 7-sample run, see `results/variant-comparison.md`. Full matrices, including
+in-frame insertion patterns and the `mixed` priority distribution, are in `results/`.)*
 
 The upstream cost fits `≈ 68·n + 6.2·n²` ns: the quadratic term only takes over around
 `n ≈ 11`.
@@ -114,6 +114,8 @@ node apply-fix.mjs            ../dom/dom-main.ts ../dom/dom-main-fixed.ts
 node extract-raf.mjs          ../dom/dom-main-fixed.ts current variants/from-patched.mts
 node verify.mjs               # shipped code == benchmarked code
 
+node order-check.mts current  # the exact schedule used by the unit test in the PR
+node order-check.mts ordered-insert
 node equiv.mts 2000           # differential equivalence
 node bench-driver.mts         # full matrix -> results/
 node bench-worker.mts current 100 zeros none 2000 9   # one point
