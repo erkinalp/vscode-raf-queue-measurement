@@ -103,20 +103,69 @@ built by the same op list with that one character changed):
 | equal-priority | `["frame","a","b","inserted","late"]` | `["frame","inserted","a","b","late"]` |
 | insertion boundaries | `["inserter","before","a","b","between","low","after"]` | `["inserter","before","between","a","b","low","after"]` |
 
-## What this does **not** measure
+## Queue length in the product (measured)
 
-The distribution of `n` in the product. The best in-product evidence so far is from
-@jrieken on #274994, who instrumented the function in a development build and measured the
-totals for the *entire* sorting work over 5 startup runs as `0.30 / 0.19 / 0.09 / 0.20 / 0`
-ms, with: *"looking at the counts, it seems the array is usually very short (1, 2)"*.
-`probe/probe-ops.mjs` instruments the same histogram (`globalThis.__rafProbe`) if it needs to
-be repeated.
+The cost curve above says what one drain costs at a given `n`. `probe/probe-ops.mjs` adds the
+matching histogram to `dom.ts` (`globalThis.__rafProbe`) and `probe/inproduct.cjs` reads it out
+of a real workbench: the web workbench (v1.143 from `375c6e74`) served by `@vscode/test-web`
+with its sample folder, driven in headless Chrome over CDP at 61 fps, on a fixed interaction
+script (command palette, quick open a file, type ~3500 characters, toggle sidebar and panel,
+zoom, scroll). The run was effective: 1 editor open, 39 visible lines, 3557 characters typed.
 
-The structural reason the queue is short: it is not a fan-in point. 83 files call
+| phase | drains | items | mean n | max n | n = 1 | n ≤ 4 | n ≤ 12 |
+|---|---|---|---|---|---|---|---|
+| startup (page load + 10 s settle) | 33 | 169 | 5.12 | **59** | 63.6 % | 81.8 % | 87.9 % |
+| 83.6 s of the interaction script | 1777 | 1847 | **1.04** | **4** | 96.2 % | 100 % | 100 % |
+| idle (30 s, nothing scheduled) | 0 | 0 | – | – | – | – | – |
+
+The startup histogram is `{1: 21, 2: 1, 3: 2, 4: 3, 5: 2, 19: 1, 20: 2, 59: 1}`, the scenario one is
+`{1: 1710, 2: 65, 3: 1, 4: 1}`. Full output: `results/inproduct-final.json`.
+
+Three things follow.
+
+- **The sort is almost never given anything to do.** During heavy editing, 96 % of drains have
+  exactly one callback. At `n = 1` a sort is a no-op and `shift()` is a length check, which is
+  why every variant in the table above measures the same at `n = 1`.
+- **The worst case is startup, not steady state.** The largest queue observed anywhere was
+  `n = 59`, once, during startup.
+- **The total cost is negligible.** Applying the measured cost curve to the scenario
+  histogram, the whole queue cost about **0.14 ms across 83.6 seconds** (≈ 137 µs of
+  `68n + 6.2n²`, of which nothing exceeds 0.4 µs in a single drain); startup totals about
+  0.04 ms, 26 µs of which is the single `n = 59` drain. That is 2 µs per second of heavy
+  interaction, against the "1–2 ms per frame" in the issue.
+
+Why the queue stays short: it is not a fan-in point. 83 files call
 `scheduleAtNextAnimationFrame`, but each subsystem coalesces its own work first (its own
 `RunOnceScheduler`, `AnimationFrameScheduler` or dirty flag), so `n` is bounded by the number
 of *distinct* subsystems that reach a frame, not by the number of extensions, decorations or
-editors.
+editors. Nothing schedules at all while the workbench is idle, which is why `dom.ts`'s queue
+does not appear in a profile.
+
+This agrees with, and sharpens, @jrieken's in-product probe on #274994: he measured the totals
+for the *entire* sorting work over 5 startup runs as `0.30 / 0.19 / 0.09 / 0.20 / 0` ms and
+reported *"the array is usually very short (1, 2)"*.
+
+### Deviation
+
+This run used a locally built workbench, and that build needed one repair: `npm run build-fast
+-- --client-only` emitted a corrupt
+`out/vs/editor/contrib/inlineCompletions/browser/model/inlineCompletionsModel.js` — the
+parameter decorators in that file came out mangled (`this._editor` became `this._ed)tor`) and
+the file was not valid UTF-8, so the workbench could not boot at all. Re-transpiling that one
+file with TypeScript's own `transpileModule` (VS Code's options: `experimentalDecorators`,
+`useDefineForClassFields: false`) produced a valid file with the 8 `__param` DI calls intact,
+after which 10271/10271 build outputs parse and only the intentionally-odd file-search test
+fixtures are excluded. No source file was modified.
+
+## What this does **not** measure
+
+A *desktop* VS Code with extensions, an open workspace and the chat panel doing real work, and
+the distribution over many runs rather than one fixed script. The web workbench without
+extensions is the lightest end of the product; if a heavier workload raised `n` into the
+hundreds, the `n²` term would start to be visible. The probe is committed
+(`probe/probe-ops.mjs`, `probe/inproduct.cjs`) so that can be repeated on a build that boots
+without repair.
+
 
 ## Reproduce
 
