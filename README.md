@@ -119,7 +119,9 @@ zoom, scroll). The run was effective: 1 editor open, 39 visible lines, 3557 char
 | idle (30 s, nothing scheduled) | 0 | 0 | – | – | – | – | – |
 
 The startup histogram is `{1: 21, 2: 1, 3: 2, 4: 3, 5: 2, 19: 1, 20: 2, 59: 1}`, the scenario one is
-`{1: 1710, 2: 65, 3: 1, 4: 1}`. Full output: `results/inproduct-final.json`.
+`{1: 1710, 2: 65, 3: 1, 4: 1}`. Full output: `results/inproduct-final.json` (an earlier attempt against a throttled background
+tab is not kept: Chrome fires almost no animation frames for a hidden page, which produced
+3 drains and would have understated nothing but misled about the method).
 
 Three things follow.
 
