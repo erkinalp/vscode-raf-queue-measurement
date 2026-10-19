@@ -147,6 +147,38 @@ This agrees with, and sharpens, @jrieken's in-product probe on #274994: he measu
 for the *entire* sorting work over 5 startup runs as `0.30 / 0.19 / 0.09 / 0.20 / 0` ms and
 reported *"the array is usually very short (1, 2)"*.
 
+## When the queue grows instead: `requestAnimationFrame` suspended
+
+The measurements above are all taken with frames flowing. A report on the issue
+([comment](https://github.com/microsoft/vscode/issues/272155#issuecomment-6258370972))
+describes the opposite state: a display that is asleep does not deliver
+`requestAnimationFrame`, everything that schedules a callback keeps appending to
+`NEXT_QUEUE`, and the first frame after wake has to drain the whole accumulation at once.
+`probe/suspension.cjs` reproduces that by holding the rAF callbacks the workbench asks for
+(the window keeps running its timers) and then releasing them.
+
+| trial | accumulated `n` | rate | drain, upstream | drain, sort-once + shift-free |
+|---|---|---|---|---|
+| idle workbench, frames held 60 s | 5 | 0.08/s | – | – |
+| typing while frames held 20 s | 321 | 16/s | 9.3 ms | **5.6 ms** |
+| typing while frames held 60 s | 864 | 14/s | 11.2 ms | **6.0 ms** |
+
+Two things this shows:
+
+- **Nothing drains while frames are withheld**: 0 drains and exactly 1 pending native frame
+  callback, with the queue growing linearly at ~15 items/s under sustained typing (and at
+  ~0.08/s when the workbench is merely idle). Only the running work does the accumulating,
+  which is why an idle editor does not grow the queue but a busy one does.
+- **`shift()` is the remaining quadratic term, and it is measurable**: at identical
+  workloads, walking the queue with an index instead of shifting it halves the drain
+  (11.2 → 6.0 ms at n=864). The removed term is the `6.2·n²` from the cost curve.
+
+At the queue size implied by the report (≈30 items/s over 2.5 h ≈ 3·10⁵ items) that term is
+`6.2 ns × (3·10⁵)² ≈ 9 minutes` of pure bookkeeping, against ≈1 s for the same drain with
+the index walk — which is the difference between the reported freeze and a hiccup. It does
+not remove the burst itself: the callbacks still all run in one go, so a bounded
+(time-budgeted or coalescing) drain remains a separate policy question.
+
 ### Deviation
 
 This run used a locally built workbench, and that build needed one repair: `npm run build-fast

@@ -1,0 +1,60 @@
+{
+  "generatedAt": "2026-10-19T07:08:09.116Z",
+  "app": "http://127.0.0.1:8080/",
+  "chrome": "/usr/bin/google-chrome-stable",
+  "holds": [
+    20,
+    60
+  ],
+  "baseline": {
+    "frames": 34,
+    "items": 167,
+    "inFrameInserts": 1,
+    "maxQueueLength": 57,
+    "histogram": {
+      "1": 20,
+      "2": 6,
+      "4": 2,
+      "5": 2,
+      "19": 1,
+      "20": 1,
+      "21": 1,
+      "57": 1
+    }
+  },
+  "trials": [
+    {
+      "holdSeconds": 20,
+      "typedCharacters": 1160,
+      "pendingFrameCallbacks": 1,
+      "drainsDuringSuspension": 0,
+      "release": {
+        "released": 1,
+        "drainMs": 9.299999982118607,
+        "probes": "see next read",
+        "suspendedMs": 20631
+      },
+      "drainMs": 9.299999982118607,
+      "n": 321,
+      "itemsPerSecond": 16.05,
+      "nsPerItem": 28971.962561117154
+    },
+    {
+      "holdSeconds": 60,
+      "typedCharacters": 480,
+      "pendingFrameCallbacks": 1,
+      "drainsDuringSuspension": 0,
+      "release": {
+        "released": 1,
+        "drainMs": 11.200000017881393,
+        "probes": "see next read",
+        "suspendedMs": 64651.90000000596
+      },
+      "drainMs": 11.200000017881393,
+      "n": 864,
+      "itemsPerSecond": 14.4,
+      "nsPerItem": 12962.96298365902
+    }
+  ],
+  "consoleTail": []
+}

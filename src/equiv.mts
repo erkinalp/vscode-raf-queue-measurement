@@ -111,6 +111,7 @@ const variants: Record<string, string> = {
 	'ordered-insert': './variants/ordered-insert.mts',
 	heap: './variants/heap.mts',
 	'stable-heap': './variants/stable-heap.mts',
+	'head-index': './variants/head-index.mts',
 };
 
 const loaded: Record<string, VariantModule> = {};

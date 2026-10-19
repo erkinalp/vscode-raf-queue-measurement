@@ -1,5 +1,5 @@
 /**
- * stable-heap-ops.mjs — the direction of PR #275565 (attempt 2), reduced to what it
+ * stable-heap-ops.mjs - the direction of PR #275565 (attempt 2), reduced to what it
  * actually needs: a priority queue with a sequence tie-break, so that callbacks of
  * equal priority still run in the order they were scheduled.
  *

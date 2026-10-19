@@ -1,5 +1,5 @@
 /**
- * fix-ops.mjs — the single definition of the change to src/vs/base/browser/dom.ts.
+ * fix-ops.mjs - the single definition of the change to src/vs/base/browser/dom.ts.
  *
  * Both the patch generator (apply-fix.mjs) and the benchmark variant extractor
  * (extract-raf.mjs) consume these ops, so the code that is measured is literally the
@@ -12,7 +12,7 @@ export const HELP_DOC = [
 	`${T} * Inserts \`item\` into \`queue\`, which must be sorted by priority in descending`,
 	`${T} * order. Items with an equal priority are placed after the ones already in the`,
 	`${T} * queue, which is the order a stable sort of the whole queue produced before.`,
-	`${T} * Index moves only — no array is allocated and nothing is returned.`,
+	`${T} * Index moves only - no array is allocated and nothing is returned.`,
 	`${T} */`,
 	`${T}function insertSorted(queue: AnimationFrameQueueItem[], item: AnimationFrameQueueItem): void {`,
 	`${T}${T}let low = 0;`,
@@ -48,7 +48,7 @@ export const OLD_LOOP = [
 export const NEW_LOOP = [
 	`${T}${T}inAnimationFrameRunner.set(targetWindowId, true);`,
 	`${T}${T}// Sort once and then keep the queue ordered while it drains. Executing a runner may`,
-	`${T}${T}// add to this queue, but re-sorting it after every single execution is O(n² log n).`,
+	`${T}${T}// add to this queue, but re-sorting it after every single execution is O(n^2 log n).`,
 	`${T}${T}currentQueue.sort(AnimationFrameQueueItem.sort);`,
 	`${T}${T}while (currentQueue.length > 0) {`,
 	`${T}${T}${T}const top = currentQueue.shift()!;`,

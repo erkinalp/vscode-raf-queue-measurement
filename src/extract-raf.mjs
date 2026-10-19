@@ -22,6 +22,7 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { FIX_OPS } from './fix-ops.mjs';
 import { STABLE_HEAP_OPS } from './stable-heap-ops.mjs';
+import { HEAD_INDEX_OPS } from './head-index-ops.mjs';
 
 const [, , domTsPath, variant, outPath] = process.argv;
 if (!domTsPath || !variant || !outPath) {
@@ -230,6 +231,8 @@ const variants = {
 	'mutant-gt': [...FIX_OPS, op(`${T}${T}${T}if (queue[mid].priority >= item.priority) {`, `${T}${T}${T}if (queue[mid].priority > item.priority) {`)],
 
 	'stable-heap': STABLE_HEAP_OPS,
+
+	'head-index': [...FIX_OPS, ...HEAD_INDEX_OPS],
 
 	heap: [
 		op(`${T}const animationFrameRunner = (targetWindowId: number) => {`, heapHelper),

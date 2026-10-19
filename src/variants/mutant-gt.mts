@@ -105,7 +105,7 @@ class AnimationFrameQueueItem implements IDisposable {
 	 * Inserts `item` into `queue`, which must be sorted by priority in descending
 	 * order. Items with an equal priority are placed after the ones already in the
 	 * queue, which is the order a stable sort of the whole queue produced before.
-	 * Index moves only — no array is allocated and nothing is returned.
+	 * Index moves only - no array is allocated and nothing is returned.
 	 */
 	function insertSorted(queue: AnimationFrameQueueItem[], item: AnimationFrameQueueItem): void {
 		let low = 0;
@@ -137,7 +137,7 @@ class AnimationFrameQueueItem implements IDisposable {
 
 		inAnimationFrameRunner.set(targetWindowId, true);
 		// Sort once and then keep the queue ordered while it drains. Executing a runner may
-		// add to this queue, but re-sorting it after every single execution is O(n² log n).
+		// add to this queue, but re-sorting it after every single execution is O(n^2 log n).
 		currentQueue.sort(AnimationFrameQueueItem.sort);
 		while (currentQueue.length > 0) {
 			const top = currentQueue.shift()!;
